@@ -11,7 +11,5 @@ class Vortex {
   }
 }
 const vortex = new Vortex();
-vortex.db.listen("bis", (data) => {
-  console.log(data);
-});
+
 module.exports = vortex;

@@ -20,7 +20,8 @@ class VortexDB {
       socket.send(JSON.stringify({ collection: dbPath, type: "SUBSCRIBE" }));
       socket.addEventListener("message", (message) => {
         if (callback) {
-          callback(JSON.parse(message));
+          console.log(message);
+          callback(message);
         }
       });
     });
