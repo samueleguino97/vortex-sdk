@@ -21,7 +21,7 @@ class VortexDB {
       socket.addEventListener("message", (message) => {
         if (callback) {
           console.log(message);
-          callback(message);
+          callback(JSON.parse(message.data));
         }
       });
     });
