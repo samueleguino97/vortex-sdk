@@ -1,3 +1,14 @@
+function heartbeat() {
+  clearTimeout(this.pingTimeout);
+
+  // Use `WebSocket#terminate()`, which immediately destroys the connection,
+  // instead of `WebSocket#close()`, which waits for the close timer.
+  // Delay should be equal to the interval at which your server
+  // sends out pings plus a conservative assumption of the latency.
+  this.pingTimeout = setTimeout(() => {
+    this.terminate();
+  }, 30000 + 1000);
+}
 class VortexDB {
   constructor(databaseUrl) {
     this.baseUrl = databaseUrl;
@@ -16,7 +27,13 @@ class VortexDB {
   listen(dbPath = "", callback, query = {}) {
     const socket = new WebSocket("ws://localhost:8080");
 
-    socket.addEventListener("open", () => {
+    socket.addEventListener("ping", heartbeat);
+    socket.addEventListener("close", function clear() {
+      clearTimeout(this.pingTimeout);
+    });
+
+    socket.addEventListener("open", (params) => {
+      heartbeat(params);
       socket.send(JSON.stringify({ collection: dbPath, type: "SUBSCRIBE" }));
       socket.addEventListener("message", (message) => {
         if (callback) {
