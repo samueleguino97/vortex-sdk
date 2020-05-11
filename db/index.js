@@ -61,6 +61,12 @@ class VortexDB {
       headers: { "Content-Type": "application/json" },
     });
   }
+
+  createCollection(collection) {
+    return fetch(
+      `${this.baseUrl}/createCollection?collection=${collection}`
+    ).then((res) => res.json());
+  }
 }
 
 module.exports = VortexDB;
