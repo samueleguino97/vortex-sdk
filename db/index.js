@@ -20,7 +20,6 @@ class VortexDB {
       socket.send(JSON.stringify({ collection: dbPath, type: "SUBSCRIBE" }));
       socket.addEventListener("message", (message) => {
         if (callback) {
-          console.log(message);
           callback(JSON.parse(message.data));
         }
       });
@@ -28,6 +27,10 @@ class VortexDB {
     return () => {
       socket.close();
     };
+  }
+
+  listCollections() {
+    return fetch(`${this.baseUrl}/listCollections`).then((res) => res.json());
   }
 
   get(dbPath = "", query = {}) {
