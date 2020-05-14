@@ -1,72 +1,76 @@
 function heartbeat() {
-  clearTimeout(this.pingTimeout);
+	clearTimeout(this.pingTimeout);
 
-  // Use `WebSocket#terminate()`, which immediately destroys the connection,
-  // instead of `WebSocket#close()`, which waits for the close timer.
-  // Delay should be equal to the interval at which your server
-  // sends out pings plus a conservative assumption of the latency.
-  this.pingTimeout = setTimeout(() => {
-    this.terminate();
-  }, 30000 + 1000);
+	// Use `WebSocket#terminate()`, which immediately destroys the connection,
+	// instead of `WebSocket#close()`, which waits for the close timer.
+	// Delay should be equal to the interval at which your server
+	// sends out pings plus a conservative assumption of the latency.
+	this.pingTimeout = setTimeout(() => {
+		this.terminate();
+	}, 30000 + 1000);
 }
 class VortexDB {
-  constructor(databaseUrl) {
-    this.baseUrl = databaseUrl;
-    this.crudUrl = `${databaseUrl}/crud`;
-  }
+	constructor(databaseUrl) {
+		this.baseUrl = databaseUrl;
+		this.crudUrl = `${databaseUrl}/crud`;
+		this.socketUrl = 'ws://localhost:8080';
+	}
 
-  async _interact(collection, params) {
-    const urlToInteract =
-      `${this.crudUrl}/${collection}` + (params.extraUrl || "");
+	_init(dbPath, socketUrl) {
+		this.baseUrl = dbPath;
+		this.crudUrl = `${dbPath}/crud`;
+		this.socketUrl = socketUrl;
+	}
 
-    const response = await fetch(urlToInteract, params);
-    const data = await response.json();
-    return data;
-  }
+	async _interact(collection, params) {
+		const urlToInteract = `${this.crudUrl}/${collection}` + (params.extraUrl || '');
 
-  listen(dbPath = "", callback, query = {}) {
-    const socket = new WebSocket("ws://localhost:8080");
+		const response = await fetch(urlToInteract, params);
+		const data = await response.json();
+		return data;
+	}
 
-    socket.addEventListener("ping", heartbeat);
-    socket.addEventListener("close", function clear() {
-      clearTimeout(this.pingTimeout);
-    });
+	listen(dbPath = '', callback, query = {}) {
+		const socket = new WebSocket(this.socketUrl);
 
-    socket.addEventListener("open", (params) => {
-      heartbeat(params);
-      socket.send(JSON.stringify({ collection: dbPath, type: "SUBSCRIBE" }));
-      socket.addEventListener("message", (message) => {
-        if (callback) {
-          callback(JSON.parse(message.data));
-        }
-      });
-    });
-    return () => {
-      socket.close();
-    };
-  }
+		socket.addEventListener('ping', heartbeat);
+		socket.addEventListener('close', function clear() {
+			clearTimeout(this.pingTimeout);
+		});
 
-  listCollections() {
-    return fetch(`${this.baseUrl}/listCollections`).then((res) => res.json());
-  }
+		socket.addEventListener('open', (params) => {
+			heartbeat(params);
+			socket.send(JSON.stringify({ collection: dbPath, type: 'SUBSCRIBE' }));
+			socket.addEventListener('message', (message) => {
+				if (callback) {
+					callback(JSON.parse(message.data));
+				}
+			});
+		});
+		return () => {
+			socket.close();
+		};
+	}
 
-  get(dbPath = "", query = {}) {
-    return this._interact(dbPath, { method: "GET", ...query });
-  }
+	listCollections() {
+		return fetch(`${this.baseUrl}/listCollections`).then((res) => res.json());
+	}
 
-  create(collection, data) {
-    return this._interact(collection, {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: { "Content-Type": "application/json" },
-    });
-  }
+	get(dbPath = '', query = {}) {
+		return this._interact(dbPath, { method: 'GET', ...query });
+	}
 
-  createCollection(collection) {
-    return fetch(
-      `${this.baseUrl}/createCollection?collection=${collection}`
-    ).then((res) => res.json());
-  }
+	create(collection, data) {
+		return this._interact(collection, {
+			method: 'POST',
+			body: JSON.stringify(data),
+			headers: { 'Content-Type': 'application/json' }
+		});
+	}
+
+	createCollection(collection) {
+		return fetch(`${this.baseUrl}/createCollection?collection=${collection}`).then((res) => res.json());
+	}
 }
 
 module.exports = VortexDB;
