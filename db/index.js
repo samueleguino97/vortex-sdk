@@ -68,6 +68,20 @@ class VortexDB {
 		});
 	}
 
+	update(collection, documentId, data) {
+		return this._interact(collection, {
+			method: 'PUT',
+			body: JSON.stringify({ data, id: documentId }),
+			headers: { 'Content-Type': 'application/json' }
+		});
+	}
+	delete(collection, documentId) {
+		return this._interact(collection, {
+			method: 'DELETE',
+			extraUrl: '?id=' + documentId
+		});
+	}
+
 	createCollection(collection) {
 		return fetch(`${this.baseUrl}/createCollection?collection=${collection}`).then((res) => res.json());
 	}
