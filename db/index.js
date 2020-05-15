@@ -7,7 +7,7 @@ function heartbeat() {
 	// sends out pings plus a conservative assumption of the latency.
 	this.pingTimeout = setTimeout(() => {
 		this.terminate();
-	}, 30000 + 1000);
+	}, 50000);
 }
 class VortexDB {
 	constructor(databaseUrl) {
