@@ -6,7 +6,11 @@ function heartbeat() {
 	// Delay should be equal to the interval at which your server
 	// sends out pings plus a conservative assumption of the latency.
 	this.pingTimeout = setTimeout(() => {
-		this.terminate();
+		if (this.terminate) {
+			this.terminate();
+		} else {
+			this.close();
+		}
 	}, 50000);
 }
 class VortexDB {
